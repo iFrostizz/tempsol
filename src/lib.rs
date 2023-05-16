@@ -1,3 +1,4 @@
+use ethers_solc::artifacts::BytecodeObject;
 use ethers_solc::{project_util::TempProject, ConfigurableArtifacts, ProjectCompileOutput};
 
 #[derive(Clone)]
@@ -38,4 +39,26 @@ pub fn compile_project(
     }
 
     (project, compiled)
+}
+
+/// Create a temp project and return the deployed bytecode of a single contract
+pub fn get_deploy_code(contract: String) -> Vec<u8> {
+    let (_project, output) = compile_contract(contract);
+
+    let artifacts = output.compiled_artifacts();
+    let artifact = artifacts.iter().next().unwrap().1;
+    let contract_artifact = &artifact["FSM"];
+    if let BytecodeObject::Bytecode(bytecode) = contract_artifact[0]
+        .artifact
+        .deployed_bytecode
+        .clone()
+        .unwrap()
+        .bytecode
+        .unwrap()
+        .object
+    {
+        bytecode.to_vec()
+    } else {
+        panic!("unliked bytecode not supported");
+    }
 }
